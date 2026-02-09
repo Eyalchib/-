@@ -84,35 +84,25 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center py-12 px-4 sm:px-6">
-      {/* Exact Logo Representation Header */}
+      {/* Exact Logo Representation Header - No external images as requested */}
       <header className="w-full max-w-4xl mb-16 flex flex-col items-center text-center">
-        <div className="mb-4 relative w-48">
-          {/* Illustration part */}
-          <div className="relative mx-auto w-32 h-32 mb-2">
-             <img 
-               src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=300&h=300" 
-               alt="Illustration" 
-               className="w-full h-full object-cover grayscale rounded-full border-2 border-slate-100"
-             />
-             <div className="absolute top-2 right-6 w-5 h-10 bg-cyan-400 mix-blend-multiply rounded-full rotate-12 opacity-80"></div>
+        <div className="mb-4 relative">
+          {/* Adva Korn Text Branding */}
+          <div className="relative mb-2">
+            <h1 className="text-6xl font-black text-slate-900 leading-none tracking-tight">אדוה קורן</h1>
+            <div className="absolute top-[-8px] right-[52%] w-3 h-3 bg-cyan-400 rounded-full"></div>
           </div>
           
-          {/* Text part: Adva Korn */}
-          <div className="relative">
-            <h1 className="text-5xl font-black text-slate-900 leading-none">אדוה קורן</h1>
-            <div className="absolute top-[-10px] right-[54%] w-2 h-2 bg-cyan-400 rounded-full"></div>
-          </div>
-          
-          {/* Subtext: Studio for Design and Branding */}
-          <p className="text-2xl font-serif text-slate-800 mt-1 italic" style={{ fontFamily: 'cursive, serif' }}>
+          {/* Studio Description */}
+          <p className="text-3xl font-serif text-slate-800 italic" style={{ fontFamily: 'Assistant, sans-serif' }}>
             סטודיו לעיצוב ומיתוג
           </p>
           
           {/* Swoosh Underline */}
-          <div className="w-40 h-1 bg-cyan-400 mx-auto rounded-full mt-2 opacity-80"></div>
+          <div className="w-48 h-1.5 bg-cyan-400 mx-auto rounded-full mt-3 opacity-90"></div>
           
           {/* Phone number */}
-          <div className="text-slate-900 font-bold mt-4 tracking-wider text-xl">
+          <div className="text-slate-900 font-extrabold mt-6 tracking-widest text-2xl">
             054-2444576
           </div>
         </div>
@@ -186,12 +176,12 @@ export default function App() {
         )}
       </main>
 
-      {/* Minimal Signature Footer */}
+      {/* Signature Footer */}
       <footer className="w-full py-8 border-t border-slate-50 mt-auto flex flex-col items-center gap-2">
-        <div className="text-cyan-500 text-lg font-black tracking-tight">
+        <div className="text-cyan-500 text-2xl font-black tracking-tight">
           לבניית תדמית מנצחת לעסק שלך!
         </div>
-        <div className="text-slate-400 text-xs">
+        <div className="text-slate-400 text-sm font-medium">
           &copy; {new Date().getFullYear()} סטודיו אדוה קורן - כל הזכויות שמורות
         </div>
       </footer>
