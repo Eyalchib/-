@@ -12,6 +12,49 @@ const Summary: React.FC<Props> = ({ data }) => {
     window.print();
   };
 
+  const handleSendEmail = () => {
+    const subject = encodeURIComponent(`שאלון איפיון מותג - ${data.businessName || 'עסק חדש'}`);
+    const body = encodeURIComponent(`
+שלום אדוה, מצורף שאלון האיפיון שמילאתי באתר:
+
+--- פרטי העסק ---
+שם העסק: ${data.businessName}
+תיאור קצר: ${data.oneLineDescription}
+מטרת העסק: ${data.businessGoal}
+
+--- חזון וערכים ---
+חזון: ${data.vision}
+ערכים מרכזיים: ${data.coreValues}
+ייחוד עסקי: ${data.uniqueSellingPoint}
+מסר מרכזי: ${data.mainMessage}
+רגש רצוי: ${data.desiredEmotion}
+
+--- קהל יעד ---
+פרופיל קהל יעד: ${data.targetAudience}
+לקוח אידיאלי: ${data.idealClientProfile}
+אתגרים/צרכים: ${data.clientChallenges}
+
+--- עיצוב וסגנון ---
+סגנון מועדף: ${data.preferredStyle}
+צבעים מתאימים: ${data.brandColors}
+צבעים להימנע: ${data.avoidColors}
+סוגי פונטים: ${data.fontTypes}
+סקאלת המותג: ${data.vibeScale === 'emotional' ? 'רגשי/חם' : data.vibeScale === 'professional' ? 'עסקי/ענייני' : 'מאוזן'}
+
+--- מידע נוסף ---
+מוצרים/שירותים: ${data.productsServices}
+לוגו קיים: ${data.existingLogo === 'yes' ? 'כן - ' + data.existingLogoDetails : 'לא'}
+ליווי מקצועי נוסף: ${data.professionalsInvolved}
+שותפים להחלטה: ${data.decisionMakers}
+חומרי השראה: ${data.inspirationMaterials}
+
+בברכה,
+${data.businessName || 'לקוח השאלון'}
+    `);
+
+    window.location.href = `mailto:advakoreninfo@gmail.com?subject=${subject}&body=${body}`;
+  };
+
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="text-center">
@@ -22,7 +65,7 @@ const Summary: React.FC<Props> = ({ data }) => {
         <p className="text-slate-500 text-xl font-medium">הנה סיכום האיפיון שלך - צעד ראשון למיתוג מנצח.</p>
       </div>
 
-      <div className="bg-slate-50 rounded-[2.5rem] p-8 space-y-6 max-h-[450px] overflow-y-auto border border-slate-100 print:max-h-none print:bg-white print:p-0 custom-scrollbar shadow-inner">
+      <div className="bg-slate-50 rounded-[2.5rem] p-8 space-y-6 max-h-[450px] overflow-y-auto border border-slate-100 print:max-h-none print:bg-white print:p-0 custom-scrollbar shadow-inner text-right">
         <div className="flex items-center gap-3 border-b border-slate-200 pb-4 mb-4">
           <div className="w-3 h-8 bg-cyan-400 rounded-full"></div>
           <h4 className="font-black text-slate-900 text-lg">פרופיל המותג החדש</h4>
@@ -40,7 +83,7 @@ const Summary: React.FC<Props> = ({ data }) => {
 
       <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8">
         <button
-          onClick={() => alert('השאלון נשלח לסטודיו אדוה קורן! נהיה בקשר בקרוב.')}
+          onClick={handleSendEmail}
           className="w-full sm:w-auto flex items-center justify-center gap-3 px-14 py-4 bg-slate-900 text-white font-black rounded-2xl hover:bg-black shadow-xl shadow-slate-200 transition-all active:scale-95"
         >
           <Send className="w-5 h-5" />
