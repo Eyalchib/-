@@ -1,7 +1,7 @@
 
 import React, { useRef, useState } from 'react';
 import { QuestionnaireData } from '../types';
-import { Send, FileDown, CheckCircle, Loader2, Share2 } from 'lucide-react';
+import { Send, FileDown, CheckCircle, Loader2, MessageCircle, Share2 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 
@@ -12,6 +12,8 @@ interface Props {
 const Summary: React.FC<Props> = ({ data }) => {
   const summaryRef = useRef<HTMLDivElement>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+
+  const STUDIO_PHONE = '972542444576'; // Adva Korn's number in international format
 
   const getPDFBlob = async (): Promise<{ blob: Blob; fileName: string } | null> => {
     if (!summaryRef.current) return null;
@@ -44,28 +46,50 @@ const Summary: React.FC<Props> = ({ data }) => {
     }
   };
 
-  const handleSendToStudio = async () => {
+  const handleWhatsAppShare = async () => {
     const result = await getPDFBlob();
     if (!result) return;
 
     const { blob, fileName } = result;
     const file = new File([blob], fileName, { type: 'application/pdf' });
 
-    // Try to use Web Share API (best for mobile/modern browsers to send directly)
+    // Use Web Share API if supported - this allows sending the file directly to WhatsApp without saving
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       try {
         await navigator.share({
           files: [file],
           title: `שאלון איפיון - ${data.businessName}`,
-          text: `שלום אדוה, מצורף שאלון האיפיון שלי עבור ${data.businessName}.`,
+          text: `היי אדוה, מצורף שאלון האיפיון שלי עבור המותג: ${data.businessName}`,
         });
-        return; // Success
+        return;
       } catch (err) {
-        console.log('Share was cancelled or failed, falling back to email/download.');
+        console.log('Share was cancelled or not supported for this file type.');
       }
     }
 
-    // Fallback: Automatic download + Mailto (Standard browser behavior)
+    // Fallback if Native Share is not available (e.g., Desktop or older browsers)
+    // We send a message and then trigger a download so they can attach it manually
+    const text = encodeURIComponent(`היי אדוה, מילאתי את שאלון האיפיון עבור ${data.businessName || 'העסק שלי'}. הקובץ יורד עכשיו למכשיר שלי ואשלח לך אותו מיד.`);
+    window.open(`https://wa.me/${STUDIO_PHONE}?text=${text}`, '_blank');
+    
+    // Trigger download as fallback
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    link.click();
+    URL.revokeObjectURL(url);
+    
+    alert('הקובץ יורד למכשירך. ניתן לצרף אותו עכשיו בשיחת הוואטסאפ שנפתחה.');
+  };
+
+  const handleSendEmail = async () => {
+    const result = await getPDFBlob();
+    if (!result) return;
+
+    const { blob, fileName } = result;
+    
+    // Emails usually require manual attachment from browser blobs
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -76,11 +100,7 @@ const Summary: React.FC<Props> = ({ data }) => {
     const subject = encodeURIComponent(`שאלון איפיון מותג - ${data.businessName || 'עסק חדש'}`);
     const body = encodeURIComponent(`
 שלום אדוה, מצורף שאלון האיפיון שמילאתי באתר.
-הקובץ ירד הרגע למחשב שלי, אנא צרפי אותו למייל זה.
-
---- פרטים כלליים ---
-שם העסק: ${data.businessName}
-תיאור קצר: ${data.oneLineDescription}
+הקובץ ירד הרגע למכשיר שלי, אנא צרפי אותו למייל זה.
 
 בברכה,
 ${data.businessName || 'לקוח השאלון'}
@@ -88,7 +108,6 @@ ${data.businessName || 'לקוח השאלון'}
 
     setTimeout(() => {
       window.location.href = `mailto:advakoreninfo@gmail.com?subject=${subject}&body=${body}`;
-      alert('קובץ ה-PDF ירד למכשיר שלך. אנא צרפי אותו למייל שנפתח כעת (מגבלות דפדפן לא מאפשרות צירוף אוטומטי).');
     }, 500);
   };
 
@@ -141,26 +160,38 @@ ${data.businessName || 'לקוח השאלון'}
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8">
+      <div className="flex flex-col gap-4 max-w-lg mx-auto w-full pt-8">
+        {/* Primary Action: WhatsApp */}
         <button
-          onClick={handleSendToStudio}
+          onClick={handleWhatsAppShare}
           disabled={isGenerating}
-          className="w-full sm:w-auto flex items-center justify-center gap-4 px-16 py-5 bg-slate-900 text-white font-black rounded-3xl hover:bg-black shadow-[0_20px_40px_rgba(0,0,0,0.15)] transition-all active:scale-95 disabled:opacity-70 group"
+          className="flex items-center justify-center gap-4 px-10 py-6 bg-[#25D366] text-white font-black rounded-3xl hover:bg-[#128C7E] shadow-[0_20px_40px_rgba(37,211,102,0.25)] transition-all active:scale-95 disabled:opacity-70 group text-2xl"
         >
-          {isGenerating ? <Loader2 className="w-6 h-6 animate-spin" /> : (
-            navigator.share ? <Share2 className="w-6 h-6 group-hover:scale-110 transition-transform" /> : <Send className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-          )}
-          <span>{navigator.share ? 'שלח לסטודיו' : 'הורד ושלח במייל'}</span>
+          {isGenerating ? <Loader2 className="w-8 h-8 animate-spin" /> : <MessageCircle className="w-8 h-8 group-hover:scale-110 transition-transform" />}
+          <span>שלח בוואטסאפ לסטודיו</span>
         </button>
 
-        <button
-          onClick={handleJustDownload}
-          disabled={isGenerating}
-          className="w-full sm:w-auto flex items-center justify-center gap-3 px-10 py-5 border-2 border-slate-100 rounded-3xl text-slate-500 font-bold hover:bg-slate-50 hover:border-slate-200 transition-all disabled:opacity-50"
-        >
-          <FileDown className="w-5 h-5" />
-          <span>שמירה כ-PDF</span>
-        </button>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Secondary Action: Email */}
+          <button
+            onClick={handleSendEmail}
+            disabled={isGenerating}
+            className="flex items-center justify-center gap-3 px-6 py-4 bg-slate-900 text-white font-bold rounded-2xl hover:bg-black shadow-xl shadow-slate-100 transition-all active:scale-95 disabled:opacity-70 group"
+          >
+            {isGenerating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
+            <span>שלח במייל</span>
+          </button>
+
+          {/* Tertiary Action: Download */}
+          <button
+            onClick={handleJustDownload}
+            disabled={isGenerating}
+            className="flex items-center justify-center gap-3 px-6 py-4 border-2 border-slate-100 rounded-2xl text-slate-500 font-bold hover:bg-slate-50 hover:border-slate-200 transition-all disabled:opacity-50"
+          >
+            <FileDown className="w-5 h-5" />
+            <span>שמור PDF למכשיר</span>
+          </button>
+        </div>
       </div>
     </div>
   );
