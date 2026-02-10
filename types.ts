@@ -36,3 +36,12 @@ export interface QuestionnaireData {
 }
 
 export type StepKey = 'welcome' | 'business' | 'vision' | 'audience' | 'style' | 'additional' | 'summary';
+
+// New types for Studio Dashboard
+export type SubmissionStatus = 'new' | 'in_progress' | 'completed';
+
+export interface Submission extends QuestionnaireData {
+  id: string;
+  submittedAt: string;
+  status: SubmissionStatus;
+}
