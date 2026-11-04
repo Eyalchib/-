@@ -1,0 +1,499 @@
+<title>סטודיו קו אחד</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&family=Assistant:wght@400;600;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a studio table — the stage (the video frame) sits on the right, the tool rack beside it, a contact sheet of examples underneath. */
+:root{
+  --paper:#EDEFF3;      /* cool drafting paper */
+  --sheet:#F8F9FB;
+  --ink:#16181F;
+  --muted:#5D6373;
+  --rule:#D3D7E0;
+  --accent:#2F47D6;     /* cobalt ink */
+  --accent-ink:#FFFFFF;
+  --f-display:"Amatic SC","Assistant",system-ui,sans-serif;
+  --f-body:"Assistant","Segoe UI",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#111319;--sheet:#181B23;--ink:#E7E9EF;--muted:#9AA1B2;--rule:#2A2F3B;--accent:#8A9BFF;--accent-ink:#0D0F15;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#111319;--sheet:#181B23;--ink:#E7E9EF;--muted:#9AA1B2;--rule:#2A2F3B;--accent:#8A9BFF;--accent-ink:#0D0F15;color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 64px}
+.wrap{max-width:1180px;margin-inline:auto;display:grid;gap:40px}
+header{display:grid;gap:6px}
+h1{font-family:var(--f-display);font-size:clamp(56px,9vw,96px);line-height:.9;margin:0;letter-spacing:.01em;text-wrap:balance}
+.lede{margin:0;color:var(--muted);max-width:62ch;font-size:17px}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+.studio{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:28px;align-items:start}
+@media (max-width:860px){.studio{grid-template-columns:minmax(0,1fr)}}
+.stage-box{display:grid;gap:10px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}
+@media (max-width:860px){.stage-box{position:static}}
+.stage-frame{background:#000;border-radius:6px;overflow:hidden;display:grid;place-items:center;max-height:78vh;box-shadow:0 1px 0 var(--rule),0 18px 40px -24px rgba(10,14,30,.45)}
+#stage{display:block;width:100%;height:auto;max-height:78vh;object-fit:contain}
+.stage-meta{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.stage-meta b{color:var(--ink);font-weight:500}
+
+.rack{display:grid;gap:22px;background:var(--sheet);border:1px solid var(--rule);border-radius:6px;padding:20px}
+.group{display:grid;gap:8px}
+.group>label,.group>.lbl{font-weight:600;font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:inherit;font-size:14px;padding:6px 12px;border-radius:999px;border:1px solid var(--rule);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.chip:focus-visible,.btn:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px}
+.row output{font-family:var(--f-mono);font-size:13px;color:var(--muted);min-width:5ch;text-align:left}
+input[type=range]{width:100%;accent-color:var(--accent)}
+input[type=text],select{font:inherit;padding:8px 10px;border-radius:4px;border:1px solid var(--rule);background:var(--paper);color:var(--ink);width:100%}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{font:inherit;font-weight:600;padding:10px 16px;border-radius:4px;border:1px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn[disabled]{opacity:.5;cursor:default}
+.hint{font-size:13px;color:var(--muted);margin:0}
+.status{font-family:var(--f-mono);font-size:12px;color:var(--accent);min-height:1.4em}
+.drop{border:1px dashed var(--rule);border-radius:4px;padding:12px;display:grid;gap:8px}
+
+section>h2{font-family:var(--f-display);font-size:48px;line-height:1;margin:0 0 4px}
+section>p.sub{margin:0 0 18px;color:var(--muted);max-width:62ch}
+.sheet{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:18px}
+.card{display:grid;gap:8px;text-align:right;font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+.card canvas{width:100%;aspect-ratio:1;max-width:100%;border-radius:4px;display:block;box-shadow:0 0 0 1px var(--rule)}
+.card:hover canvas{box-shadow:0 0 0 2px var(--accent)}
+.card .t{font-weight:800;font-size:17px;line-height:1.2}
+.card .d{font-size:14px;color:var(--muted);line-height:1.4}
+.card .tag{font-family:var(--f-mono);font-size:11px;color:var(--muted);letter-spacing:.04em}
+
+.ideas{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:0;border-top:1px solid var(--rule)}
+.idea{padding:16px 0 16px 20px;border-bottom:1px solid var(--rule);display:grid;gap:4px}
+.idea b{font-size:17px}
+.idea span{color:var(--muted);font-size:15px}
+footer{color:var(--muted);font-size:13px}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+
+<div class="wrap" dir="rtl" lang="he">
+  <header>
+    <span class="eyebrow">VIDEO ART · CONTINUOUS LINE</span>
+    <h1>קו אחד</h1>
+    <p class="lede">כל ציור כאן נוצר מקו אחד רציף שלא מתרומם מהדף. בוחרים ציור, סגנון וקצב, ומקליטים וידאו. אפשר גם להעלות תמונה ולהפוך אותה לקו אחד.</p>
+  </header>
+
+  <div class="studio">
+    <div class="stage-box">
+      <div class="stage-frame"><canvas id="stage" width="1080" height="1080" aria-label="במה: ציור קו אחד מונפש"></canvas></div>
+      <div class="stage-meta"><span>ציור: <b id="m-name">פנים בעיניים עצומות</b></span><span id="m-time">0.0s</span></div>
+    </div>
+
+    <div class="rack">
+      <div class="group">
+        <span class="lbl">ציור</span>
+        <div class="chips" id="pick-drawing"></div>
+      </div>
+      <div class="group">
+        <span class="lbl">סגנון</span>
+        <div class="chips" id="pick-style"></div>
+      </div>
+      <div class="group">
+        <span class="lbl">פורמט</span>
+        <div class="chips" id="pick-ratio"></div>
+      </div>
+      <div class="group">
+        <div class="row"><label for="dur">משך הציור</label><output id="dur-o">6s</output></div>
+        <input type="range" id="dur" min="2" max="24" step="0.5" value="6">
+        <div class="row"><label for="wid">עובי קו</label><output id="wid-o">1×</output></div>
+        <input type="range" id="wid" min="0.4" max="3" step="0.1" value="1">
+      </div>
+      <div class="group">
+        <label for="ending">אחרי שהקו נגמר</label>
+        <select id="ending">
+          <option value="fade">החזקה ואז דהייה (לופ)</option>
+          <option value="retract">הקו נאסף חזרה (לופ)</option>
+          <option value="hold">נשאר על המסך</option>
+        </select>
+        <label for="caption">טקסט שמופיע בסוף</label>
+        <input type="text" id="caption" value="קו אחד" maxlength="40">
+      </div>
+      <div class="actions">
+        <button class="btn" id="replay" type="button">נגן מההתחלה</button>
+        <button class="btn primary" id="record" type="button">הקלט וידאו</button>
+      </div>
+      <div class="status" id="status" role="status"></div>
+
+      <div class="group drop">
+        <label for="file">הפוך תמונה שלך לקו אחד</label>
+        <input type="file" id="file" accept="image/*">
+        <div class="chips" id="pick-method"></div>
+        <div class="row"><label for="dens">צפיפות</label><output id="dens-o">רגיל</output></div>
+        <input type="range" id="dens" min="0.4" max="2" step="0.1" value="1">
+        <p class="hint">פורטרט על רקע בהיר עובד הכי טוב. העיבוד קורה בדפדפן, התמונה לא נשלחת לשום מקום.</p>
+      </div>
+    </div>
+  </div>
+
+  <section>
+    <h2>דוגמאות</h2>
+    <p class="sub">לחיצה על ציור טוענת אותו לבמה. כל הדוגמאות מצוירות בקו רציף אחד מההתחלה ועד הסוף.</p>
+    <div class="sheet" id="sheet"></div>
+  </section>
+
+  <section>
+    <h2>רעיונות לסרטונים</h2>
+    <p class="sub">מבנים שעובדים טוב בקו אחד, לרילס, לפתיח של מותג או לווידאו־ארט בתערוכה.</p>
+    <div class="ideas">
+      <div class="idea"><b>חשיפת לוגו</b><span>הקו מצייר דמות, ממשיך לזרום ונסגר לתוך שם המותג. 6–8 שניות, מתאים לפתיח.</span></div>
+      <div class="idea"><b>מטמורפוזה</b><span>אותו קו עובר מצורה לצורה: פנים, חתול, ספל, לב. סיפור שלם בלי חיתוך אחד.</span></div>
+      <div class="idea"><b>מצילום לקו</b><span>מעלים פורטרט של לקוח והקו "מגלה" אותו בספירלה. מתנה אישית או פוסט השקה.</span></div>
+      <div class="idea"><b>קו בזמן אמת</b><span>הקלטה אנכית 9:16 של ציור בסגנון ניאון, עם מוזיקה איטית. הדהייה בסוף סוגרת לופ.</span></div>
+      <div class="idea"><b>מתמטיקה שמציירת</b><span>הרמונוגרף: מטוטלות דמיוניות שמשאירות קו אחד. מתאים כרקע מונפש למסך גדול.</span></div>
+      <div class="idea"><b>נשימה</b><span>קו שמצויר ונאסף חזרה בקצב של שאיפה ונשיפה. לתוכן מיינדפולנס ויוגה.</span></div>
+    </div>
+  </section>
+
+  <footer>כל הציורים כאן מקוריים ונוצרים בקוד, בהשראת הסגנון של ציור בקו אחד.</footer>
+</div>
+
+<script>
+(()=>{
+"use strict";
+const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ---------- geometry helpers ---------- */
+function samplePath(d, n){
+  const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");
+  const p=document.createElementNS("http://www.w3.org/2000/svg","path");
+  p.setAttribute("d",d);svg.appendChild(p);
+  svg.style.cssText="position:absolute;width:0;height:0;visibility:hidden";
+  document.body.appendChild(svg);
+  const L=p.getTotalLength(),out=[];
+  for(let i=0;i<=n;i++){const q=p.getPointAtLength(L*i/n);out.push([q.x/1000,q.y/1000]);}
+  svg.remove();return out;
+}
+function normalize(pts,pad=0){
+  let a=1e9,b=1e9,c=-1e9,e=-1e9;
+  for(const[x,y]of pts){if(x<a)a=x;if(y<b)b=y;if(x>c)c=x;if(y>e)e=y;}
+  const s=Math.max(c-a,e-b)||1,ox=(1-(c-a)/s)/2,oy=(1-(e-b)/s)/2;
+  return pts.map(([x,y])=>[pad+(1-2*pad)*((x-a)/s+ox),pad+(1-2*pad)*((y-b)/s+oy)]);
+}
+function resample(pts,n){
+  const cum=[0];for(let i=1;i<pts.length;i++)cum.push(cum[i-1]+Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]));
+  const L=cum[cum.length-1],out=[];let j=0;
+  for(let i=0;i<n;i++){const t=L*i/(n-1);while(j<cum.length-2&&cum[j+1]<t)j++;
+    const seg=cum[j+1]-cum[j]||1,u=(t-cum[j])/seg;out.push([pts[j][0]+(pts[j+1][0]-pts[j][0])*u,pts[j][1]+(pts[j+1][1]-pts[j][1])*u]);}
+  return out;
+}
+function smooth(pts,k=2){ // light moving-average to soften corners of generated tours
+  if(pts.length<5)return pts;const out=[];
+  for(let i=0;i<pts.length;i++){let sx=0,sy=0,c=0;for(let j=-k;j<=k;j++){const q=pts[Math.min(pts.length-1,Math.max(0,i+j))];sx+=q[0];sy+=q[1];c++;}out.push([sx/c,sy/c]);}
+  return out;
+}
+
+/* ---------- hand-drawn one-line paths (1000×1000 space) ---------- */
+const PATHS={
+  face:"M 230 950 C 220 820 190 680 205 540 C 225 360 320 200 490 175 C 660 155 790 270 795 440 C 800 600 720 740 590 785 C 540 802 470 800 430 775 C 360 730 320 640 318 540 C 320 490 340 465 365 458 C 390 495 430 495 455 460 C 480 470 495 500 500 540 C 505 575 480 595 492 610 C 505 625 535 622 550 606 C 565 570 555 500 545 462 C 570 497 615 497 640 458 C 650 520 620 620 572 668 C 545 650 520 648 500 660 C 480 648 455 650 428 668 C 460 705 540 705 572 668 C 590 662 610 668 625 680",
+  cat:"M 780 600 C 900 640 900 830 720 840 L 330 840 C 270 840 265 770 320 750 C 290 650 300 545 375 480 C 330 440 310 385 318 325 L 300 190 L 395 255 C 445 240 500 240 550 255 L 645 190 L 628 325 C 632 360 630 385 625 400 L 720 380 L 627 412 L 715 430 L 620 425 C 610 450 595 468 572 480 C 650 545 670 650 640 750 C 690 775 690 840 625 840",
+  cup:"M 540 70 C 490 120 570 170 500 260 C 470 215 390 225 395 290 C 400 345 465 375 500 405 C 535 375 600 345 605 290 C 610 225 530 215 500 260 C 470 310 540 380 500 460 C 420 455 330 458 300 470 C 330 500 670 500 700 470 C 702 500 702 520 700 540 C 790 530 810 640 690 660 C 670 710 650 745 630 770 C 700 775 790 785 800 800 C 760 840 240 840 200 800 C 220 785 300 775 370 770 C 330 700 300 580 300 472",
+};
+PATHS.plant="M 120 860 L 360 860 L 320 660 L 680 660 L 640 860 L 880 860 C 700 862 560 860 520 840 C 505 780 498 720 500 660 C 500 560 520 470 560 380 C 600 300 680 260 760 250 C 740 330 680 400 580 420 C 560 425 545 430 535 440 C 520 370 470 300 380 270 C 330 255 280 255 240 265 C 280 340 360 390 470 400 C 485 402 495 406 505 415 C 505 330 500 230 520 140 C 560 180 570 260 530 330";
+
+function heartLine(){
+  const pts=[],cx=0.5,cy=0.47,s=0.021,tipY=cy+17*s;
+  for(let i=0;i<=160;i++){const u=i/160;pts.push([0.04+u*(cx-0.04),tipY+Math.sin(u*Math.PI*3)*0.035*(1-u)]);}
+  for(let i=1;i<=500;i++){const t=Math.PI+i/500*Math.PI*2;
+    const x=16*Math.sin(t)**3,y=13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t);pts.push([cx+x*s,cy-y*s]);}
+  for(let i=1;i<=160;i++){const u=i/160;pts.push([cx+u*(0.96-cx),tipY-Math.sin(u*Math.PI*3)*0.035*u]);}
+  return pts;
+}
+function harmonograph(seed=0){
+  const R=mulberry(7+seed),f=[2.01,3,3.002,2],pts=[];
+  const p=[R()*6.28,R()*6.28,R()*6.28,R()*6.28],d=[0.0035,0.0022,0.003,0.0028];
+  for(let i=0;i<6000;i++){const t=i*0.075;
+    const x=Math.sin(f[0]*t+p[0])*Math.exp(-d[0]*t)+Math.sin(f[1]*t+p[1])*Math.exp(-d[1]*t);
+    const y=Math.sin(f[2]*t+p[2])*Math.exp(-d[2]*t)+Math.sin(f[3]*t+p[3])*Math.exp(-d[3]*t);
+    pts.push([x,y]);}
+  return pts;
+}
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+
+/* ---------- image → one line ---------- */
+function toDarkness(src,size=320){
+  const c=document.createElement("canvas");c.width=c.height=size;const g=c.getContext("2d",{willReadFrequently:true});
+  g.fillStyle="#fff";g.fillRect(0,0,size,size);
+  const w=src.width,h=src.height,s=Math.min(size/w,size/h);g.drawImage(src,(size-w*s)/2,(size-h*s)/2,w*s,h*s);
+  const d=g.getImageData(0,0,size,size).data,out=new Float32Array(size*size);
+  let mn=1,mx=0;
+  for(let i=0;i<size*size;i++){const v=1-(0.299*d[i*4]+0.587*d[i*4+1]+0.114*d[i*4+2])/255;out[i]=v;if(v<mn)mn=v;if(v>mx)mx=v;}
+  const r=mx-mn||1;for(let i=0;i<out.length;i++)out[i]=(out[i]-mn)/r;
+  return {size,data:out,at(x,y){const X=Math.min(size-1,Math.max(0,x*size|0)),Y=Math.min(size-1,Math.max(0,y*size|0));return out[Y*size+X];}};
+}
+function tspLine(dk,density=1){
+  const R=mulberry(11),N=Math.round(3200*density),pts=[];let tries=0;
+  while(pts.length<N&&tries<N*80){tries++;const x=R(),y=R(),v=dk.at(x,y);if(R()<Math.pow(v,2.4))pts.push([x,y]);}
+  if(pts.length<3)return [[0.5,0.5],[0.5,0.5]];
+  // nearest-neighbour tour via grid
+  const G=48,cells=Array.from({length:G*G},()=>[]);pts.forEach((p,i)=>cells[(Math.min(G-1,p[1]*G|0))*G+Math.min(G-1,p[0]*G|0)].push(i));
+  const used=new Uint8Array(pts.length),tour=[0];used[0]=1;
+  for(let k=1;k<pts.length;k++){const c=pts[tour[k-1]],cx=Math.min(G-1,c[0]*G|0),cy=Math.min(G-1,c[1]*G|0);let best=-1,bd=1e9;
+    for(let r=0;r<G&&best<0||r<2&&r<G;r++){
+      for(let yy=cy-r;yy<=cy+r;yy++)for(let xx=cx-r;xx<=cx+r;xx++){if(xx<0||yy<0||xx>=G||yy>=G)continue;if(Math.max(Math.abs(xx-cx),Math.abs(yy-cy))!==r)continue;
+        for(const j of cells[yy*G+xx]){if(used[j])continue;const dd=(pts[j][0]-c[0])**2+(pts[j][1]-c[1])**2;if(dd<bd){bd=dd;best=j;}}}
+      if(best>=0&&r>=1)break;}
+    if(best<0)break;used[best]=1;tour.push(best);}
+  let P=tour.map(i=>pts[i]);
+  // windowed 2-opt with a time budget
+  const t0=performance.now(),D=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+  let improved=true;
+  while(improved&&performance.now()-t0<450){improved=false;
+    for(let i=0;i<P.length-3;i++){for(let j=i+2;j<Math.min(P.length-1,i+60);j++){
+      if(D(P[i],P[i+1])+D(P[j],P[j+1])>D(P[i],P[j])+D(P[i+1],P[j+1])+1e-9){let a=i+1,b=j;while(a<b){const t=P[a];P[a]=P[b];P[b]=t;a++;b--;}improved=true;}}
+      if(performance.now()-t0>450)break;}}
+  return smooth(P,1);
+}
+function spiralLine(dk,density=1){
+  // Archimedean spiral walked at constant arc length; the wiggle amplitude follows the image darkness
+  const R=0.47,gap=R/Math.round(34*density),ds=0.0022,wl=gap*1.35,pts=[];
+  let th=0.6,ph=0;
+  while(true){const r=gap*th/(Math.PI*2);if(r>R)break;
+    const x=0.5+r*Math.cos(th),y=0.5+r*Math.sin(th),v=dk.at(x,y),a=gap*0.5*Math.pow(v,0.9)*Math.sin(ph);
+    pts.push([x+a*Math.cos(th),y+a*Math.sin(th)]);
+    th+=ds/Math.max(r,gap);ph+=Math.PI*2*ds/wl;}
+  return pts;
+}
+function waveLine(dk,density=1){
+  const rows=Math.round(56*density),pts=[],gap=1/rows,M=420;
+  for(let r=0;r<rows;r++){const y=(r+0.5)*gap;
+    for(let m=0;m<=M;m++){const u=m/M,x=r%2?1-u:u,v=dk.at(x,y);pts.push([x,y+gap*0.5*v*Math.sin(m*1.1)]);}}
+  return pts;
+}
+
+/* sample sources for the generated examples */
+function sampleSphere(){
+  const c=document.createElement("canvas");c.width=c.height=400;const g=c.getContext("2d");
+  g.fillStyle="#fff";g.fillRect(0,0,400,400);
+  g.fillStyle="rgba(0,0,0,.55)";g.beginPath();g.ellipse(225,330,140,28,0,0,Math.PI*2);g.fill();
+  const gr=g.createRadialGradient(150,130,10,190,180,170);gr.addColorStop(0,"#fff");gr.addColorStop(.35,"#9a9a9a");gr.addColorStop(1,"#000");
+  g.fillStyle=gr;g.beginPath();g.arc(195,185,135,0,Math.PI*2);g.fill();return c;
+}
+function sampleCat(){
+  const c=document.createElement("canvas");c.width=c.height=400;const g=c.getContext("2d");
+  g.fillStyle="#fff";g.fillRect(0,0,400,400);g.save();g.translate(20,10);g.scale(.36,.36);
+  const p=new Path2D(PATHS.cat.replace(/C 690 775 690 840 625 840$/,"C 690 775 690 840 625 840 Z"));
+  const gr=g.createLinearGradient(0,150,0,850);gr.addColorStop(0,"#111");gr.addColorStop(1,"#777");g.fillStyle=gr;g.fill(p);g.restore();return c;
+}
+function sampleWord(){
+  const c=document.createElement("canvas");c.width=c.height=400;const g=c.getContext("2d");
+  g.fillStyle="#fff";g.fillRect(0,0,400,400);g.fillStyle="#000";g.textAlign="center";g.textBaseline="middle";
+  g.direction="rtl";g.font="800 230px Assistant, Arial, sans-serif";g.fillText("קו",200,215);return c;
+}
+
+/* ---------- drawings registry ---------- */
+const DRAWINGS={};
+function add(id,name,desc,tag,make,opts={}){DRAWINGS[id]={id,name,desc,tag,make,pts:null,width:opts.width||1,style:opts.style||"ink",pad:opts.pad??0.09,morph:!!opts.morph};}
+add("face","פנים בעיניים עצומות","קו שיורד מהשיער, מקיף את הפנים ונסגר בשפתיים.","ידני · 6 שניות",()=>normalize(samplePath(PATHS.face,900)),{style:"ink"});
+add("cat","חתול יושב","זנב שהופך לבסיס, אוזניים ושפם בתנועה אחת.","ידני · 5 שניות",()=>normalize(samplePath(PATHS.cat,800)),{style:"chalk"});
+add("cup","ספל ולב","האדים מציירים לב ויורדים לתוך הספל.","ידני · 6 שניות",()=>normalize(samplePath(PATHS.cup,900)),{style:"neon"});
+add("plant","עציץ","מהשולחן, דרך העציץ, אל העלים.","ידני · 6 שניות",()=>normalize(samplePath(PATHS.plant,900)),{style:"ink"});
+add("heart","לב על חוט","קו גלי שעובר דרך לב ויוצא בצד השני.","פרמטרי · 5 שניות",()=>normalize(heartLine()),{style:"rainbow",width:1.3});
+add("morph","מטמורפוזה","אותו קו עובר מפנים לחתול, לספל ולעציץ.","מעברים · לופ",()=>null,{style:"gold",morph:true});
+add("harmono","הרמונוגרף","שתי מטוטלות דמיוניות מציירות קו אחד שדועך.","מתמטי · 12 שניות",()=>normalize(harmonograph(0)),{style:"gold",width:.5,pad:.06});
+add("tsp","כדור בנקודה אחת","3,200 נקודות שמחוברות במסלול אחד, כמו בעיית הסוכן הנוסע.","מתמונה · TSP",()=>normalize(tspLine(toDarkness(sampleSphere()))),{style:"ink",width:.5,pad:.06});
+add("spiral","חתול בספירלה","ספירלה אחת שרוחב הגל שלה עוקב אחרי הצל.","מתמונה · ספירלה",()=>spiralLine(toDarkness(sampleCat())),{style:"neon",width:.45,pad:.03});
+add("waves","המילה קו בגלים","שורה אחרי שורה, קו אחד שמתעבה איפה שיש דיו.","מתמונה · גלים",()=>waveLine(toDarkness(sampleWord()),.75),{style:"chalk",width:.5,pad:.04});
+add("custom","התמונה שלך","","",()=>[[.5,.5],[.5,.5]],{style:"ink",width:.5,pad:.04});
+const MORPH_SEQ=["face","cat","cup","plant"];
+function getPts(id){const d=DRAWINGS[id];if(!d.pts&&!d.morph)d.pts=d.make();return d.pts;}
+let morphShapes=null;
+function getMorph(){if(!morphShapes)morphShapes=MORPH_SEQ.map(id=>resample(getPts(id),1400));return morphShapes;}
+
+/* ---------- styles ---------- */
+const STYLES={
+  ink:{name:"דיו על נייר",bg:"#F6F5F0",stroke:"#15161A",w:3.2,text:"#15161A"},
+  neon:{name:"ניאון",bg:"#06070B",stroke:"#7CF3FF",glow:"#22D3EE",w:2.6,text:"#BFF8FF"},
+  gold:{name:"זהב על כחול",bg:"#0D1A2E",stroke:"#E8C46A",grad:["#F7E3A3","#C9983A"],w:2.6,text:"#F1D58C"},
+  chalk:{name:"גיר על לוח",bg:"#1E2B25",stroke:"#ECEDE4",chalk:true,w:3,text:"#ECEDE4"},
+  rainbow:{name:"קשת",bg:"#FBFBFD",rainbow:true,w:3.6,text:"#1B1B22"},
+};
+const RATIOS={"1:1":[1080,1080],"9:16":[1080,1920],"16:9":[1920,1080]};
+
+/* ---------- player ---------- */
+const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+class Player{
+  constructor(canvas,{drawing,style,duration,width=1,ending="fade",caption="",small=false}){
+    this.c=canvas;this.g=canvas.getContext("2d");this.small=small;
+    this.trail=document.createElement("canvas");this.tg=this.trail.getContext("2d");
+    Object.assign(this,{style,duration,widthMul:width,ending,caption});this.setDrawing(drawing);this.resize();
+  }
+  resize(){this.trail.width=this.c.width;this.trail.height=this.c.height;this.restart();}
+  setDrawing(id){this.id=id;const d=DRAWINGS[id];this.d=d;
+    if(d.morph){this.shapes=getMorph();this.pts=this.shapes[0];}else this.pts=getPts(id);
+    this.cum=[0];for(let i=1;i<this.pts.length;i++)this.cum.push(this.cum[i-1]+Math.hypot(this.pts[i][0]-this.pts[i-1][0],this.pts[i][1]-this.pts[i-1][1]));
+    this.restart();}
+  restart(){this.t0=null;this.last=0;this.tg.clearRect(0,0,this.trail.width,this.trail.height);this.cycleT=0;}
+  get hold(){return 1.6}
+  get fadeT(){return 1.1}
+  get cycle(){
+    if(this.d.morph)return this.duration+ (this.shapes.length-1)*2.4 + 1.2 + 1.4;
+    return this.duration+(this.ending==="hold"?1e9:this.hold+(this.ending==="retract"?this.duration*.6:this.fadeT)+.4);
+  }
+  map(){const W=this.c.width,H=this.c.height,cap=this.caption&&!this.small?(H>W?0.1:0.13):0;
+    const S=Math.min(W,H*(1-cap))*(1-2*this.d.pad)*(this.small?1:.92),ox=(W-S)/2,oy=(H*(1-cap)-S)/2;return [S,ox,oy];}
+  lw(){const st=STYLES[this.style];return st.w*this.d.width*this.widthMul*(this.c.width/1080)*(this.small?1.6:1);}
+  strokeSeg(g,from,to,pts){
+    const st=STYLES[this.style],[S,ox,oy]=this.map(),lw=this.lw();
+    if(to-from<1)return;
+    g.lineCap="round";g.lineJoin="round";g.lineWidth=lw;
+    const P=i=>[ox+pts[i][0]*S,oy+pts[i][1]*S];
+    const draw=(color,off=0,alpha=1)=>{g.globalAlpha=alpha;g.strokeStyle=color;g.beginPath();let p=P(from);g.moveTo(p[0]+off,p[1]-off);for(let i=from+1;i<=to;i++){p=P(i);g.lineTo(p[0]+off,p[1]-off);}g.stroke();g.globalAlpha=1;};
+    if(st.rainbow){const N=pts.length,step=12;for(let a=from;a<to;a+=step){const b=Math.min(to,a+step);g.strokeStyle=`hsl(${(a/N*330+200)%360} 82% 52%)`;g.beginPath();let p=P(a);g.moveTo(...p);for(let i=a+1;i<=b;i++){p=P(i);g.lineTo(...p);}g.stroke();}return;}
+    if(st.grad){const gr=g.createLinearGradient(0,0,this.c.width,this.c.height);gr.addColorStop(0,st.grad[0]);gr.addColorStop(1,st.grad[1]);draw(gr);return;}
+    if(st.glow){g.shadowColor=st.glow;g.shadowBlur=lw*(this.pts.length>5000?3:6);draw(st.stroke);g.shadowBlur=0;return;}
+    if(st.chalk){draw(st.stroke,0,.85);g.lineWidth=lw*.55;draw(st.stroke,lw*.35,.35);return;}
+    draw(st.stroke);
+  }
+  idxAt(f){const L=this.cum[this.cum.length-1]*f;let lo=0,hi=this.cum.length-1;while(lo<hi){const m=(lo+hi)>>1;if(this.cum[m]<L)lo=m+1;else hi=m;}return lo;}
+  pen(g,i,pts){const st=STYLES[this.style],[S,ox,oy]=this.map(),p=pts[Math.min(i,pts.length-1)],r=this.lw()*1.6+1.5;
+    g.fillStyle=st.rainbow?`hsl(${(i/pts.length*330+200)%360} 82% 52%)`:(st.glow||st.grad?.[0]||st.stroke);
+    if(st.glow){g.shadowColor=st.glow;g.shadowBlur=r*4;}g.beginPath();g.arc(ox+p[0]*S,oy+p[1]*S,r,0,Math.PI*2);g.fill();g.shadowBlur=0;}
+  bg(g){g.fillStyle=STYLES[this.style].bg;g.fillRect(0,0,this.c.width,this.c.height);}
+  captionText(g,a){if(!this.caption||this.small||a<=0)return;const st=STYLES[this.style],W=this.c.width,H=this.c.height;
+    g.globalAlpha=a;g.fillStyle=st.rainbow?"#1B1B22":st.text;g.textAlign="center";g.textBaseline="middle";g.direction="rtl";
+    g.font=`700 ${Math.round(Math.min(W,H)*0.085)}px "Amatic SC", Assistant, sans-serif`;
+    g.fillText(this.caption,W/2,H>W?H*0.9:H*0.925);g.globalAlpha=1;}
+  renderAt(t){ // deterministic frame at time t (seconds)
+    const g=this.g;if(t<this.last-1e-6||this.reset){this.tg.clearRect(0,0,this.trail.width,this.trail.height);this.drawnTo=0;this.reset=false;}
+    this.last=t;
+    if(this.d.morph)return this.renderMorph(t);
+    const cyc=this.cycle,tt=this.ending==="hold"?t:t%cyc;
+    if(tt<this.prevTT){this.tg.clearRect(0,0,this.trail.width,this.trail.height);this.drawnTo=0;}
+    this.prevTT=tt;
+    const D=this.duration,n=this.pts.length-1;this.bg(g);
+    if(tt<=D||this.ending!=="retract"){
+      const f=Math.min(1,ease(Math.min(1,tt/D))),i=this.idxAt(f);
+      if(i>(this.drawnTo||0)){this.strokeSeg(this.tg,this.drawnTo||0,i,this.pts);this.drawnTo=i;}
+      let alpha=1;if(this.ending==="fade"&&tt>D+this.hold)alpha=Math.max(0,1-(tt-D-this.hold)/this.fadeT);
+      g.globalAlpha=alpha;g.drawImage(this.trail,0,0);g.globalAlpha=1;
+      if(f<1)this.pen(g,i,this.pts);
+      this.captionText(g,Math.min(1,Math.max(0,(tt-D)/0.6))*alpha);
+    }else{ // retract: line is pulled back into the pen from the start
+      const r=Math.min(1,Math.max(0,(tt-D-this.hold)/(D*.6))),a=this.idxAt(ease(r));
+      this.strokeSeg(g,a,n,this.pts);if(r>0&&r<1)this.pen(g,a,this.pts);
+      this.captionText(g,1-r);
+    }
+    return tt;
+  }
+  renderMorph(t){
+    const g=this.g,D=this.duration,seg=2.4,shapes=this.shapes,cyc=this.cycle,tt=t%cyc;this.bg(g);
+    if(tt<D){const f=ease(tt/D),i=Math.max(1,Math.floor(f*(shapes[0].length-1)));this.strokeSeg(g,0,i,shapes[0]);this.pen(g,i,shapes[0]);return tt;}
+    let u=tt-D,k=Math.floor(u/seg),pts;
+    if(k<shapes.length-1){const local=u-k*seg,m=Math.min(1,Math.max(0,(local-1)/1.4)),e=ease(m),A=shapes[k],B=shapes[k+1];pts=A.map((p,i)=>[p[0]+(B[i][0]-p[0])*e,p[1]+(B[i][1]-p[1])*e]);}
+    else{pts=shapes[shapes.length-1];const local=u-(shapes.length-1)*seg;g.globalAlpha=Math.max(0,1-Math.max(0,local-1.2)/1.2);}
+    this.strokeSeg(g,0,pts.length-1,pts);g.globalAlpha=1;
+    this.captionText(g,k>=shapes.length-1?Math.max(0,1-Math.max(0,u-(shapes.length-1)*seg-1.2)/1.2):0);
+    return tt;
+  }
+  frame(now){if(this.t0==null)this.t0=now;return this.renderAt((now-this.t0)/1000);}
+}
+
+/* ---------- UI wiring ---------- */
+const $=s=>document.querySelector(s);
+const stage=$("#stage");
+const state={drawing:"face",style:"ink",ratio:"1:1",method:"tsp",duration:6,width:1,ending:"fade",caption:"קו אחד",density:1,customImg:null};
+const durDefault={face:6,cat:5,cup:6,plant:6,heart:5,morph:3,harmono:12,tsp:10,spiral:10,waves:10,custom:10};
+let main;
+
+function chips(el,items,get,set){
+  el.innerHTML="";for(const[k,label]of items){const b=document.createElement("button");b.type="button";b.className="chip";b.textContent=label;b.dataset.k=k;
+    b.setAttribute("aria-pressed",String(get()===k));b.onclick=()=>{set(k);[...el.children].forEach(c=>c.setAttribute("aria-pressed",String(c.dataset.k===get())));};el.appendChild(b);}
+}
+function refreshChips(){document.querySelectorAll("#pick-drawing .chip").forEach(c=>c.setAttribute("aria-pressed",String(c.dataset.k===state.drawing)));
+  document.querySelectorAll("#pick-style .chip").forEach(c=>c.setAttribute("aria-pressed",String(c.dataset.k===state.style)));}
+function loadDrawing(id,{keepStyle=false}={}){
+  state.drawing=id;const d=DRAWINGS[id];if(!keepStyle)state.style=d.style;
+  state.duration=durDefault[id]||6;$("#dur").value=state.duration;$("#dur-o").textContent=state.duration+"s";
+  main.style=state.style;main.duration=state.duration;main.setDrawing(id);$("#m-name").textContent=d.name;refreshChips();
+}
+function applyRatio(){const[w,h]=RATIOS[state.ratio];stage.width=w;stage.height=h;main.resize();}
+
+function buildUI(){
+  main=new Player(stage,{drawing:state.drawing,style:state.style,duration:state.duration,caption:state.caption});
+  chips($("#pick-drawing"),Object.values(DRAWINGS).filter(d=>d.id!=="custom").map(d=>[d.id,d.name]),()=>state.drawing,k=>loadDrawing(k));
+  chips($("#pick-style"),Object.entries(STYLES).map(([k,v])=>[k,v.name]),()=>state.style,k=>{state.style=k;main.style=k;main.restart();});
+  chips($("#pick-ratio"),[["1:1","ריבוע 1:1"],["9:16","רילס 9:16"],["16:9","רחב 16:9"]],()=>state.ratio,k=>{state.ratio=k;applyRatio();});
+  chips($("#pick-method"),[["tsp","נקודות (TSP)"],["spiral","ספירלה"],["waves","גלים"]],()=>state.method,k=>{state.method=k;buildCustom();});
+  $("#dur").oninput=e=>{state.duration=+e.target.value;$("#dur-o").textContent=state.duration+"s";main.duration=state.duration;main.restart();};
+  $("#wid").oninput=e=>{state.width=+e.target.value;$("#wid-o").textContent=state.width.toFixed(1)+"×";main.widthMul=state.width;main.restart();};
+  $("#ending").onchange=e=>{state.ending=e.target.value;main.ending=state.ending;main.restart();};
+  $("#caption").oninput=e=>{state.caption=e.target.value;main.caption=state.caption;};
+  $("#dens").oninput=e=>{state.density=+e.target.value;const v=state.density;$("#dens-o").textContent=v<.8?"דליל":v>1.3?"צפוף":"רגיל";};
+  $("#dens").onchange=()=>buildCustom();
+  $("#replay").onclick=()=>main.restart();
+  $("#record").onclick=record;
+  $("#file").onchange=e=>{const f=e.target.files[0];if(!f)return;const img=new Image();img.onload=()=>{state.customImg=img;buildCustom();};img.onerror=()=>status("לא הצלחתי לקרוא את הקובץ. נסו JPG או PNG.");img.src=URL.createObjectURL(f);};
+
+  // contact sheet
+  const sheet=$("#sheet");
+  for(const d of Object.values(DRAWINGS)){if(d.id==="custom")continue;
+    const b=document.createElement("button");b.type="button";b.className="card";
+    b.innerHTML=`<canvas width="420" height="420"></canvas><span class="tag"></span><span class="t"></span><span class="d"></span>`;
+    b.querySelector(".tag").textContent=d.tag;b.querySelector(".t").textContent=d.name;b.querySelector(".d").textContent=d.desc;
+    b.onclick=()=>{loadDrawing(d.id);stage.scrollIntoView({behavior:REDUCED?"auto":"smooth",block:"center"});};
+    sheet.appendChild(b);
+    const p=new Player(b.querySelector("canvas"),{drawing:d.id,style:d.style,duration:durDefault[d.id],small:true});
+    p.offset=Math.random()*2000;thumbs.push(p);}
+}
+const thumbs=[];
+function buildCustom(){
+  if(!state.customImg){status("בחרו קודם תמונה.");return;}
+  status("ממיר את התמונה לקו אחד…");
+  setTimeout(()=>{const dk=toDarkness(state.customImg),m=state.method;
+    const pts=m==="tsp"?tspLine(dk,state.density):m==="spiral"?spiralLine(dk,state.density):waveLine(dk,state.density);
+    const d=DRAWINGS.custom;d.pts=m==="tsp"?normalize(pts):pts;d.width=m==="tsp"?.5:.45;d.pad=m==="tsp"?.05:.03;d.name="התמונה שלך";
+    loadDrawing("custom",{keepStyle:true});status(`מוכן: ${pts.length.toLocaleString("he-IL")} נקודות בקו אחד.`);},30);
+}
+function status(s){$("#status").textContent=s;}
+
+/* ---------- recording ---------- */
+let recording=false;
+async function record(){
+  if(recording)return;
+  if(!stage.captureStream||typeof MediaRecorder==="undefined"){status("הדפדפן הזה לא תומך בהקלטת וידאו מהעמוד.");return;}
+  const types=["video/mp4;codecs=avc1","video/mp4","video/webm;codecs=vp9","video/webm"];
+  const mime=types.find(t=>MediaRecorder.isTypeSupported(t));if(!mime){status("הדפדפן הזה לא תומך בהקלטת וידאו מהעמוד.");return;}
+  const len=main.ending==="hold"?main.duration+2.5:Math.min(60,main.cycle);
+  recording=true;$("#record").disabled=true;
+  const stream=stage.captureStream(30),rec=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:8e6}),chunks=[];
+  rec.ondataavailable=e=>e.data.size&&chunks.push(e.data);
+  const done=new Promise(r=>rec.onstop=r);
+  main.restart();rec.start(250);
+  const t0=performance.now();const tick=setInterval(()=>status(`מקליט… ${((performance.now()-t0)/1000).toFixed(1)} / ${len.toFixed(1)} שניות`),200);
+  await new Promise(r=>setTimeout(r,len*1000+150));rec.stop();await done;clearInterval(tick);
+  const ext=mime.includes("mp4")?"mp4":"webm",blob=new Blob(chunks,{type:mime.split(";")[0]});
+  recording=false;$("#record").disabled=false;
+  const name=`kav-echad-${state.drawing}-${state.ratio.replace(":","x")}.${ext}`;
+  try{const dl=window.claude?.use?await window.claude.use("downloads"):null;
+    if(!dl){status("ההקלטה מוכנה, אבל שמירת קבצים לא זמינה בתצוגה הזו.");return;}
+    status("מאשרים את השמירה בחלון שנפתח…");await dl.save({filename:name,data:blob});status(`נשמר: ${name}`);}
+  catch(e){status(e&&e.code==="declined"?"השמירה בוטלה.":"לא הצלחתי לשמור את הקובץ"+(e&&e.code?` (${e.code})`:"")+".");}
+}
+
+/* ---------- loop ---------- */
+function loop(now){
+  const tt=main.frame(now);$("#m-time").textContent=tt.toFixed(1)+"s";
+  for(const p of thumbs){if(p.visible===false)continue;p.frame(now+p.offset);}
+  requestAnimationFrame(loop);
+}
+function boot(){
+  buildUI();
+  if("IntersectionObserver"in window){const io=new IntersectionObserver(es=>es.forEach(e=>{const p=thumbs.find(t=>t.c===e.target);if(p)p.visible=e.isIntersecting;}));thumbs.forEach(p=>io.observe(p.c));}
+  if(REDUCED){thumbs.forEach(p=>p.renderAt(p.duration+0.01));main.ending="hold";$("#ending").value="hold";}
+  if(!REDUCED)requestAnimationFrame(loop);else{const still=now=>{main.frame(now);requestAnimationFrame(still);};requestAnimationFrame(still);}
+}
+// expose for offline rendering
+window.LineStudio={DRAWINGS,STYLES,RATIOS,Player,get main(){return main;},state,loadDrawing,applyRatio};
+(document.fonts?document.fonts.ready:Promise.resolve()).then(boot,boot);
+})();
+</script>
