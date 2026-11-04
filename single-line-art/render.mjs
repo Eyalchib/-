@@ -1,6 +1,6 @@
 // Renders studio.html drawings to PNG stills or MP4 videos (needs Playwright + ffmpeg).
 // usage: node render.mjs still <outdir>
-//        node render.mjs story <out.mp4> [16:9|9:16|1:1]      (story.html, full film)
+//        node render.mjs story <out.mp4> [16:9|9:16]      (story.html, full film)
 //        node render.mjs story-still <outdir> [ratio]          (one still per scene)
 //        node render.mjs video <out.mp4> <drawing> <style> <ratio> <duration> [caption] [ending]
 import { createRequire } from 'module';
@@ -12,7 +12,8 @@ import { fileURLToPath } from 'url';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const isStory = process.argv[2]?.startsWith('story');
-const body = readFileSync(resolve(here, isStory ? 'story.html' : 'studio.html'), 'utf8');
+let body = readFileSync(resolve(here, isStory ? 'story.html' : 'studio.html'), 'utf8');
+if (isStory) body = body.replace('<script src="story-assets.js"></script>', () => `<script>${readFileSync(resolve(here, 'story-assets.js'), 'utf8')}</script>`);
 const doc = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>${body}</body></html>`;
 const [mode, out, drawing, style, ratio = '1:1', duration = '6', caption = '', ending = 'fade'] = process.argv.slice(2);
 
@@ -22,6 +23,7 @@ page.on('pageerror', e => console.error('pageerror', e.message));
 await page.setContent(doc, { waitUntil: 'networkidle' }).catch(() => {});
 await page.waitForFunction(() => window.LineStudio?.main || window.Story);
 await page.evaluate(() => document.fonts && document.fonts.ready);
+await page.evaluate(() => window.Story?.ready?.());
 
 if (mode === 'story' || mode === 'story-still') {
   const ratio = drawing || '16:9';

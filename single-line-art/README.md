@@ -25,9 +25,11 @@ Ready-made examples are in `examples/`.
 
 ## The story film (`story.html`)
 
-A ~67 second film that follows the lecture's chapters with one continuous line that morphs from scene to scene:
-heart, wedding rings, heartbeat, closed-eyes face, tangle, brick wall, cage the line escapes from, the fall to the bottom,
-plant, mother with two children, sun, and the face again with open eyes. Captions come from the slides.
+A ~97 second film in the visual language of the lecture deck: the deck's background plate and logo, Assistant type,
+and one long ground line that every drawing grows out of and sinks back into. Two scenes draw the deck's own
+line illustrations (the couple back to back, the woman sitting with her head down), vectorized from the slides;
+tears fall from them onto the line and spread as ripples. The film ends with one tear turning into the
+"אדוות החיים" ripples and logo.
 
 ```bash
 node render.mjs story examples/story-16x9.mp4 16:9   # lecture screen
@@ -35,4 +37,6 @@ node render.mjs story examples/story-9x16.mp4 9:16   # reels / stories
 node render.mjs story-still out/ 16:9                # one still per scene
 ```
 
-Scene captions, order and timing live in the `SCENES` array at the top of the script in `story.html`.
+Scene captions, order and timing live in the `SCENES` array in `story.html`.
+`story-assets.js` holds the vectorized illustrations, background plate and logo; rebuild it with
+`tools/vectorize.py` and `tools/build_story_assets.py` (needs Python with numpy and Pillow).
