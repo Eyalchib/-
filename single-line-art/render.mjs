@@ -13,7 +13,7 @@ import { fileURLToPath } from 'url';
 const here = dirname(fileURLToPath(import.meta.url));
 const isStory = process.argv[2]?.startsWith('story');
 let body = readFileSync(resolve(here, isStory ? 'story.html' : 'studio.html'), 'utf8');
-if (isStory) body = body.replace('<script src="story-assets.js"></script>', () => `<script>${readFileSync(resolve(here, 'story-assets.js'), 'utf8')}</script>`);
+body = body.replace(/<script src="([\w.-]+\.js)"><\/script>/g, (_, f) => `<script>${readFileSync(resolve(here, f), 'utf8')}</script>`);
 const doc = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>${body}</body></html>`;
 const [mode, out, drawing, style, ratio = '1:1', duration = '6', caption = '', ending = 'fade'] = process.argv.slice(2);
 

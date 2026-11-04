@@ -25,18 +25,21 @@ Ready-made examples are in `examples/`.
 
 ## The story film (`story.html`)
 
-A ~97 second film in the visual language of the lecture deck: the deck's background plate and logo, Assistant type,
-and one long ground line that every drawing grows out of and sinks back into. Two scenes draw the deck's own
-line illustrations (the couple back to back, the woman sitting with her head down), vectorized from the slides;
-tears fall from them onto the line and spread as ripples. The film ends with one tear turning into the
-"אדוות החיים" ripples and logo.
+An ~8.5 minute film that follows every slide of the lecture deck, in the deck's visual language (background plate,
+logo, Assistant type, one long ground line that every drawing grows out of). Figures move: people walk in and across
+the frame, meet, stand up, raise their arms; objects fall, fly and drive past; words and counters appear in turn.
+The deck's own line illustrations (the couple back to back, the woman sitting) are vectorized and drawn as they are,
+with tears that fall onto the line and spread as ripples. It ends with one tear turning into the "אדוות החיים" logo.
+
+Files:
+- `story.html` – the page (player and storyboard).
+- `story-scenes.js` – one entry per scene in the `SC` list: slide, heading, subheading, duration, and functions for the
+  main line, the overlay icons and the words at time `t`.
+- `figures.js` – the one-line people (standing, walking, sitting, lying) and icons.
+- `story-assets.js` – vectorized deck illustrations, background plate and logo (rebuild with `tools/vectorize.py`
+  and `tools/build_story_assets.py`, which need Python with numpy and Pillow).
 
 ```bash
 node render.mjs story examples/story-16x9.mp4 16:9   # lecture screen
 node render.mjs story examples/story-9x16.mp4 9:16   # reels / stories
-node render.mjs story-still out/ 16:9                # one still per scene
 ```
-
-Scene captions, order and timing live in the `SCENES` array in `story.html`.
-`story-assets.js` holds the vectorized illustrations, background plate and logo; rebuild it with
-`tools/vectorize.py` and `tools/build_story_assets.py` (needs Python with numpy and Pillow).
