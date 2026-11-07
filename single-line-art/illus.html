@@ -1,0 +1,53 @@
+<title>קו אחד: האיורים</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: screening room. The film frame first, the shot list beneath it. Colors follow the lecture deck. */
+:root{--paper:#F4F8FA;--ink:#3B3B3D;--muted:#69707A;--rule:#D5E3EA;--accent:#1B9CC4;--accent-ink:#fff;
+  --f-body:"Assistant","Segoe UI",system-ui,sans-serif;--f-mono:"IBM Plex Mono",ui-monospace,monospace}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--paper:#0F1418;--ink:#E6ECEF;--muted:#9AA6AE;--rule:#26323A;--accent:#5CC6E8;--accent-ink:#06222C;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#0F1418;--ink:#E6ECEF;--muted:#9AA6AE;--rule:#26323A;--accent:#5CC6E8;--accent-ink:#06222C;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 64px}
+.wrap{max-width:1100px;margin-inline:auto;display:grid;gap:22px}
+h1{font-weight:800;font-size:clamp(34px,5vw,52px);line-height:1.05;margin:0}
+.lede{margin:0;color:var(--muted);max-width:64ch}
+.frame{border-radius:6px;overflow:hidden;box-shadow:0 0 0 1px var(--rule)}
+#film{display:block;width:100%;height:auto;background:#fff}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn,.chip{font:inherit;cursor:pointer;color:var(--ink);background:transparent}
+.btn{font-weight:600;padding:9px 16px;border-radius:4px;border:1px solid var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chip{font-size:14px;padding:6px 12px;border-radius:999px;border:1px solid var(--rule)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.btn:focus-visible,.chip:focus-visible,.scene:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.time{font-family:var(--f-mono);font-size:12px;color:var(--muted);margin-inline-start:auto}
+.board{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));border-top:1px solid var(--rule)}
+.scene{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;padding:12px 0 12px 16px;border:0;border-bottom:1px solid var(--rule);background:none;text-align:right;font:inherit;color:inherit;cursor:pointer}
+.scene .n{font-family:var(--f-mono);font-size:12px;color:var(--muted);grid-row:span 2;padding-top:3px}
+.scene .c{font-weight:800;line-height:1.25}
+.scene .k{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.scene[aria-current="true"] .c{color:var(--accent)}
+</style>
+
+<div class="wrap" dir="rtl" lang="he">
+  <header>
+    <h1>קו אחד: האיורים</h1>
+    <p class="lede">שלוש הסצנות הראשונות של ההרצאה, מצוירות מהאיורים בקו. כל איור מצייר את עצמו לאורך הקו ואז זז.</p>
+  </header>
+  <div class="frame"><canvas id="film" width="1920" height="1080" aria-label="סרט האיורים"></canvas></div>
+  <div class="bar">
+    <button class="btn primary" id="play" type="button">נגן מההתחלה</button>
+    <button class="btn" id="pause" type="button">השהה</button>
+    <span id="ratio"></span>
+    <span class="time" id="time">0:00</span>
+  </div>
+  <div class="board" id="board"></div>
+</div>
+
+<script src="story-assets.js"></script>
+<script src="illus-assets.js"></script>
+<script src="illus-scenes.js"></script>

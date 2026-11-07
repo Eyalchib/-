@@ -1,6 +1,7 @@
 // Renders studio.html drawings to PNG stills or MP4 videos (needs Playwright + ffmpeg).
 // usage: node render.mjs still <outdir>
 //        node render.mjs story <out.mp4> [16:9|9:16] [scenes]  (story.html; full film, or only the first N scenes)
+//        node render.mjs illus <out.mp4> [16:9|9:16]      (illus.html, the sketched illustrations)
 //        node render.mjs story-still <outdir> [ratio]          (one still per scene)
 //        node render.mjs video <out.mp4> <drawing> <style> <ratio> <duration> [caption] [ending]
 import { createRequire } from 'module';
@@ -11,8 +12,10 @@ import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
 const here = dirname(fileURLToPath(import.meta.url));
+const isIllus = process.argv[2]?.startsWith('illus');
+if (isIllus) process.argv[2] = process.argv[2].replace('illus', 'story');
 const isStory = process.argv[2]?.startsWith('story');
-let body = readFileSync(resolve(here, isStory ? 'story.html' : 'studio.html'), 'utf8');
+let body = readFileSync(resolve(here, isIllus ? 'illus.html' : isStory ? 'story.html' : 'studio.html'), 'utf8');
 body = body.replace(/<script src="([\w.-]+\.js)"><\/script>/g, (_, f) => `<script>${readFileSync(resolve(here, f), 'utf8')}</script>`);
 const doc = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>${body}</body></html>`;
 const [mode, out, drawing, style, ratio = '1:1', duration = '6', caption = '', ending = 'fade'] = process.argv.slice(2);
