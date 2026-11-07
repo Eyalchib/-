@@ -1,6 +1,6 @@
 // Renders studio.html drawings to PNG stills or MP4 videos (needs Playwright + ffmpeg).
 // usage: node render.mjs still <outdir>
-//        node render.mjs story <out.mp4> [16:9|9:16]      (story.html, full film)
+//        node render.mjs story <out.mp4> [16:9|9:16] [scenes]  (story.html; full film, or only the first N scenes)
 //        node render.mjs story-still <outdir> [ratio]          (one still per scene)
 //        node render.mjs video <out.mp4> <drawing> <style> <ratio> <duration> [caption] [ending]
 import { createRequire } from 'module';
@@ -35,9 +35,11 @@ if (mode === 'story' || mode === 'story-still') {
     for (let i = 0; i < times.length; i++) writeFileSync(`${out}/scene${String(i + 1).padStart(2, '0')}.jpg`, Buffer.from((await grab(times[i])).split(',')[1], 'base64'));
     console.log('story stills ->', out);
   } else {
-    const fps = 30, total = await page.evaluate(() => Story.TOTAL), frames = Math.round(total * fps);
+    const fps = 30, nScenes = +process.argv[5] || 0;
+    const total = await page.evaluate(n => n && n < Story.SCENES.length ? Story.SCENES[n].t0 + .4 : Story.TOTAL, nScenes), frames = Math.round(total * fps);
+    const fade = nScenes ? ['-vf', `fade=t=in:st=0:d=0.6:color=white,fade=t=out:st=${(total - 1.2).toFixed(2)}:d=1.2:color=white`] : [];
     const ff = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(fps), '-i', '-',
-      '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '23', '-preset', 'medium', '-movflags', '+faststart', out], { stdio: ['pipe', 'inherit', 'inherit'] });
+      ...fade, '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '23', '-preset', 'medium', '-movflags', '+faststart', out], { stdio: ['pipe', 'inherit', 'inherit'] });
     for (let f = 0; f < frames; f++) { const b = Buffer.from((await grab(f / fps)).split(',')[1], 'base64'); if (!ff.stdin.write(b)) await new Promise(r => ff.stdin.once('drain', r)); }
     ff.stdin.end(); await new Promise(r => ff.on('close', r));
     console.log('story ->', out, ratio, `${total.toFixed(1)}s`);
