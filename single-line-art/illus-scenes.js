@@ -23,28 +23,85 @@ function traceLine(key,x0,x1,y0,win=40){const L=LAY[key],pts=[];let y=Math.round
   for(let x=Math.round(x0*L.w);x<=Math.round(x1*L.w);x+=3){let best=-1,bd=1e9;for(let dy=-win;dy<=win;dy++){const yy=y+dy;if(yy<0||yy>=L.h)continue;const v=L.ink[yy*L.w+x];if(v>90&&Math.abs(dy)<bd){bd=Math.abs(dy);best=yy;}}
     if(best>=0)y=best;pts.push([x/L.w,y/L.h]);}return pts;}
 
+/* ---------- puppet warp: the drawing bends around joints ---------- */
+const MESH={};
+function meshFor(key,cols=64){if(MESH[key])return MESH[key];const L=LAY[key],rows=Math.max(8,Math.round(cols*L.h/L.w)),v=[],ink=[];
+  for(let j=0;j<=rows;j++)for(let i=0;i<=cols;i++)v.push([i/cols,j/rows]);
+  for(let j=0;j<rows;j++)for(let i=0;i<cols;i++){const x0=Math.floor(i/cols*L.w),x1=Math.floor((i+1)/cols*L.w),y0=Math.floor(j/rows*L.h),y1=Math.floor((j+1)/rows*L.h);let any=false;
+    for(let y=y0;y<y1&&!any;y+=2)for(let x=x0;x<x1;x+=2)if(L.ink[y*L.w+x]>12){any=true;break;}ink.push(any);}
+  return MESH[key]={cols,rows,v,ink,asp:L.w/L.h};}
+const sstep=(a,b,x)=>{const t=clamp((x-a)/(b-a));return t*t*(3-2*t);};
+function regionW(reg,u,v,asp){let w=0;for(const r of reg){if(r.cap){const[x1,y1,x2,y2,rad]=r.cap,ax=(x2-x1)*asp,ay=y2-y1,px=(u-x1)*asp,py=v-y1,t=clamp((px*ax+py*ay)/(ax*ax+ay*ay||1)),d=Math.hypot(px-ax*t,py-ay*t);w=Math.max(w,1-sstep(rad*.55,rad,d));}
+  else if(r.rect){const[x0,y0,x1,y1,f]=r.rect,d=Math.hypot(Math.max(x0-u,0,u-x1)*asp,Math.max(y0-v,0,v-y1));w=Math.max(w,1-sstep(0,f,d));}}return w;}
+const mul=(A,B)=>[A[0]*B[0]+A[2]*B[1],A[1]*B[0]+A[3]*B[1],A[0]*B[2]+A[2]*B[3],A[1]*B[2]+A[3]*B[3],A[0]*B[4]+A[2]*B[5]+A[4],A[1]*B[4]+A[3]*B[5]+A[5]];
+function boneMats(rig,t,env,asp){const out=[];rig.bones.forEach(b=>{const a=(b.a?b.a(t):0)*env,s=1+((b.s?b.s(t):1)-1)*env,tx=(b.tx?b.tx(t):0)*env,ty=(b.ty?b.ty(t):0)*env;
+  const px=b.p[0]*asp,py=b.p[1],c=Math.cos(a)*s,n=Math.sin(a)*s,loc=[c,n,-n,c,px-c*px+n*py+tx*asp,py-n*px-c*py+ty];out.push(b.parent>=0?mul(out[b.parent],loc):loc);});return out;}
+function tri(img,La,s0,s1,s2,d0,d1,d2){const x0=s0[0]*La.w,y0=s0[1]*La.h,x1=s1[0]*La.w,y1=s1[1]*La.h,x2=s2[0]*La.w,y2=s2[1]*La.h,den=x0*(y1-y2)+x1*(y2-y0)+x2*(y0-y1);if(!den)return;
+  const a=(d0[0]*(y1-y2)+d1[0]*(y2-y0)+d2[0]*(y0-y1))/den,c=(d0[0]*(x2-x1)+d1[0]*(x0-x2)+d2[0]*(x1-x0))/den,e=(d0[0]*(x1*y2-x2*y1)+d1[0]*(x2*y0-x0*y2)+d2[0]*(x0*y1-x1*y0))/den;
+  const b=(d0[1]*(y1-y2)+d1[1]*(y2-y0)+d2[1]*(y0-y1))/den,d=(d0[1]*(x2-x1)+d1[1]*(x0-x2)+d2[1]*(x1-x0))/den,f=(d0[1]*(x1*y2-x2*y1)+d1[1]*(x2*y0-x0*y2)+d2[1]*(x0*y1-x1*y0))/den;
+  const cx=(d0[0]+d1[0]+d2[0])/3,cy=(d0[1]+d1[1]+d2[1])/3,gr=p=>{const dx=p[0]-cx,dy=p[1]-cy,l=Math.hypot(dx,dy)||1;return[p[0]+dx/l*.9,p[1]+dy/l*.9];},A_=gr(d0),B_=gr(d1),C_=gr(d2);
+  g.save();g.beginPath();g.moveTo(A_[0],A_[1]);g.lineTo(B_[0],B_[1]);g.lineTo(C_[0],C_[1]);g.closePath();g.clip();g.setTransform(a,b,c,d,e,f);
+  const sx=Math.max(0,Math.floor(Math.min(x0,x1,x2))-2),sy=Math.max(0,Math.floor(Math.min(y0,y1,y2))-2),sw=Math.min(La.w,Math.ceil(Math.max(x0,x1,x2))+2)-sx,sh=Math.min(La.h,Math.ceil(Math.max(y0,y1,y2))+2)-sy;
+  if(sw>0&&sh>0)g.drawImage(img,sx,sy,sw,sh,sx,sy,sw,sh);g.restore();}
+function drawWarped(L,s,key,p,alpha,cam,t){const pl=place(L,s,null),c=layerAt(key,p),M=meshFor(key),rig=s.rig,La=LAY[key];
+  if(!rig._w)rig._w=M.v.map(([u,v])=>rig.bones.map(b=>regionW(b.reg,u,v,M.asp)));
+  const env=rig.env?rig.env(t):seg(t,s.reveal[1]-.5,s.reveal[1]+.7),mats=boneMats(rig,t,env,M.asp),z=cam.s,w=pl.dw*z,h=pl.dh*z,x=pl.cx-w/2+cam.x*pl.dw,y=pl.cy-h/2+cam.y*pl.dh;
+  if(alpha<=0)return{...pl,x,y,w,h};
+  const dv=M.v.map(([u,v],k)=>{const ws=rig._w[k];let sum=0;for(const q of ws)sum+=q;let X=u*M.asp,Y=v;
+    if(sum>0){const nrm=sum>1?1/sum:1,keep=1-Math.min(1,sum);let ox=X*keep,oy=Y*keep;ws.forEach((q,i)=>{if(!q)return;const m=mats[i],qq=q*nrm;ox+=qq*(m[0]*X+m[2]*Y+m[4]);oy+=qq*(m[1]*X+m[3]*Y+m[5]);});X=ox;Y=oy;}
+    return[x+X/M.asp*w,y+Y*h];});
+  g.save();g.globalAlpha=alpha;const C=M.cols;
+  for(let j=0;j<M.rows;j++)for(let i=0;i<C;i++){if(!M.ink[j*C+i])continue;const a=j*(C+1)+i,b=a+1,c2=a+C+1,d=c2+1;tri(c,La,M.v[a],M.v[b],M.v[c2],dv[a],dv[b],dv[c2]);tri(c,La,M.v[b],M.v[d],M.v[c2],dv[b],dv[d],dv[c2]);}
+  g.restore();return{...pl,x,y,w,h};}
+const stomp=(t,a,b,c)=>t<a?0:t<b?ease(seg(t,a,b)):t<c?1-seg(t,b,c)**2:0;
+const WALK=2*Math.PI/1.1,WAVE=2*Math.PI/1.4;
+
 /* ---------- shots ---------- */
 const word=(t,a,o={})=>({t,a,...o});
 const pop=(t,t0,d=.7)=>seg(t,t0,t0+d);
 const SH=[
   {scene:"חתונה",sub:"16.6.2001",k:"שקף 3",img:"img01",reveal:[0,3.2],dur:7,
+    rig:{env:t=>seg(t,2.4,3.4),bones:[
+      {p:[.42,-.05],parent:-1,reg:[{cap:[.42,-.05,.3,.42,.12]}],a:t=>.09*Math.sin(t*WALK)},
+      {p:[.3,.42],parent:0,reg:[{cap:[.3,.42,.27,.62,.11]},{cap:[.14,.69,.42,.75,.08]}],a:t=>-.16*Math.max(0,Math.sin(t*WALK+1.2))},
+      {p:[.47,-.05],parent:-1,reg:[{cap:[.47,-.05,.56,.42,.12]}],a:t=>-.09*Math.sin(t*WALK)},
+      {p:[.56,.42],parent:2,reg:[{cap:[.56,.42,.6,.6,.11]},{cap:[.59,.77,.85,.52,.08]}],a:t=>-.16*Math.max(0,Math.sin(t*WALK+1.2+Math.PI))}]},
     cam:t=>({s:1.02,x:lerp(-.05,.05,seg(t,0,7)),y:Math.abs(Math.sin(t*3.2))*-.008}),
     words:t=>[word("אני זוכרת שחיכיתי לו המון זמן",pop(t,2.6)),word("הוא איחר לאסוף אותי",pop(t,4),{line:1})]},
-  {scene:"חתונה",sub:"16.6.2001",k:"שקף 3",img:"img05",alt:"img08",reveal:[0,3.2],dur:8.5,
-    mix:t=>t<3.4?0:.5-.5*Math.cos((t-3.4)*Math.PI/.8),flies:{cx:.48,cy:.3,r:.22},
+  {scene:"חתונה",sub:"16.6.2001",k:"שקף 3",img:"img05",reveal:[0,3.2],dur:8.5,flies:{cx:.48,cy:.3,r:.22},
+    rig:{bones:[
+      {p:[.6,.6],parent:-1,reg:[{cap:[.6,.6,.69,.45,.06]}],a:t=>.07*Math.sin(t*WAVE)},
+      {p:[.69,.45],parent:0,reg:[{cap:[.69,.45,.76,.25,.08]}],a:t=>.22*Math.sin(t*WAVE+.6)},
+      {p:[.63,.7],parent:-1,reg:[{cap:[.63,.7,.73,.6,.06]}],a:t=>.06*Math.sin(t*WAVE+2)},
+      {p:[.73,.6],parent:2,reg:[{cap:[.73,.6,.83,.41,.09]}],a:t=>.24*Math.sin(t*WAVE+2.6)},
+      {p:[.53,.47],parent:-1,reg:[{cap:[.53,.42,.47,.22,.17]}],a:t=>.035*Math.sin(t*.7)},
+      {p:[.38,.4],parent:-1,reg:[{cap:[.36,.45,.15,.85,.14]}],a:t=>.035*Math.sin(t*1.2)}]},
     cam:t=>({s:lerp(1,1.05,seg(t,0,8.5)),x:0,y:0}),
     words:t=>[word("עמדתי לידו בחופה",pop(t,2.8)),word("וגירשתי את המחשבות שלי כמו שמגרשים זבובים",pop(t,4.2),{line:1})]},
   {scene:"חתונה",sub:"16.6.2001",k:"שקף 3",img:"img07",reveal:[0,3],dur:7.5,
-    cam:t=>{const j=t>3.4&&t<3.9?Math.sin((t-3.4)*60)*.012*(1-seg(t,3.4,3.9)):0;return{s:1+.03*Math.exp(-Math.max(0,t-3.4)*6)*(t>3.4?1:0),x:j,y:t>3.3&&t<3.6?.01:0};},
-    shards:{t0:3.4,x:.44,y:.86},
+    rig:{env:()=>1,bones:[{p:[.7,0],parent:-1,reg:[{rect:[.27,-.1,1.1,.66,.07]}],ty:t=>-.09*stomp(t,3,3.55,3.68),a:t=>-.04*stomp(t,3,3.55,3.68)}]},
+    cam:t=>{const j=t>3.68&&t<4.2?Math.sin((t-3.68)*60)*.012*(1-seg(t,3.68,4.2)):0;return{s:1+(t>3.68?.03*Math.exp(-(t-3.68)*6):0),x:j,y:0};},
+    shards:{t0:3.68,x:.44,y:.84},
     words:t=>[word("בזמן שהוא שובר את הכוס",pop(t,3.6)),word("כל מה שעובר לי בראש: זה לא יחזיק מעמד",pop(t,5),{line:1})]},
-  {scene:"חתונה",sub:"מריבות · המתנה · שתייה · מחשבות",k:"שקף 3",img:"img03",reveal:[0,3.6],dur:8,flies:{cx:.42,cy:.12,r:.12},
+  {scene:"חתונה",sub:"מריבות · המתנה · שתייה · מחשבות",k:"שקף 3",img:"img03",reveal:[0,3.6],dur:8,flies:{cx:.42,cy:.12,r:.12},shards:{t0:4.75,x:.535,y:.86},
+    rig:{env:t=>seg(t,3,3.8),bones:[
+      {p:[.665,.52],parent:-1,reg:[{cap:[.665,.52,.6,.575,.05]}],a:t=>-.35*stomp(t,4,4.6,4.75)},
+      {p:[.6,.575],parent:0,reg:[{cap:[.6,.575,.575,.8,.05]},{cap:[.5,.8,.6,.83,.045]}],a:t=>.25*stomp(t,4,4.6,4.75)},
+      {p:[.36,.15],parent:-1,reg:[{cap:[.33,.25,.12,.88,.15]}],a:t=>.025*Math.sin(t*1.1)},
+      {p:[.66,.2],parent:-1,reg:[{cap:[.655,.2,.63,.08,.06]}],a:t=>.05*Math.sin(t*.8)},
+      {p:[.4,.2],parent:-1,reg:[{cap:[.4,.2,.38,.1,.06]}],a:t=>.035*Math.sin(t*.9+1)}]},
     cam:t=>({s:lerp(1,1.07,seg(t,0,8)),x:0,y:lerp(0,.02,seg(t,0,8))}),
     words:t=>[word("זאת הייתה חתונה כמו כל החתונות",pop(t,3.4))]},
   {scene:"הריון",sub:"נכנסנו להריון שעה אחרי שיצאנו מהחופה",k:"שקף 4",img:"img06",reveal:[0,3.2],dur:7,
+    rig:{bones:[
+      {p:[.57,.73],parent:-1,reg:[{cap:[.53,.59,.59,.62,.06]}],a:t=>.1*Math.sin(t*1.3)},
+      {p:[.555,.74],parent:-1,reg:[{cap:[.52,.67,.58,.81,.07]}],a:t=>.08*Math.sin(t*.9)},
+      {p:[.49,.38],parent:-1,reg:[{cap:[.49,.36,.5,.12,.15]}],a:t=>.035*Math.sin(t*.8+1)},
+      {p:[.57,.75],parent:-1,reg:[{cap:[.55,.86,.6,.89,.05]}],a:t=>-.07*Math.sin(t*1.3+1)}]},
     cam:t=>({s:lerp(1.04,1,seg(t,0,7)),x:0,y:Math.sin(t*1.3)*.004}),
     words:t=>[word("וכמו שזה קרה מהר, הוא יצא מהר. מהר מדי.",pop(t,3.4))]},
   {scene:"חודשיים בפגייה",sub:"קילו 600 · שבוע 31",k:"שקף 4",img:"img10",reveal:[0,3.4],dur:10,pulse:{y:.638},
+    rig:{bones:[{p:[.53,.62],parent:-1,reg:[{rect:[.39,.12,.67,.88,.04]}],s:t=>1+.022*Math.sin(t*2.4)}]},
     cam:t=>({s:1+.012*Math.sin(t*2.4)*seg(t,3.4,4),x:0,y:0}),
     words:t=>[word("היפרדות שלייה. ניתוח קיסרי.",pop(t,3)*(1-seg(t,5.8,6.2))),word("מדי פעם הוא היה מפסיק לנשום",pop(t,6.3)),word("חודשיים בפגייה, הולכים ובאים",pop(t,7.8),{line:1})]},
   {scene:"עצמתי עיניים",sub:"אני רוצה להאמין שדברים יסתדרו...",k:"שקף 6",img:"img09",crop:[0,0,1,.5],altCrop:[0,.5,1,1],reveal:[0,3],dur:8.5,
@@ -52,12 +109,16 @@ const SH=[
     cam:t=>({s:lerp(1,1.04,seg(t,0,8.5)),x:0,y:0}),
     words:t=>[word("כשהראש והלב לא מבינים",pop(t,5.4)),word("אז הגוף מנסה לדבר",pop(t,6.4),{line:1})]},
   {scene:"הגוף שילם את המחיר",sub:"",k:"שקף 6",img:"img14",reveal:[0,3.6],dur:9,
+    rig:{bones:[{p:[.3,.95],parent:-1,reg:[{rect:[.08,0,.55,.8,.08]}],ty:t=>-.008*Math.max(0,Math.sin(t*7))*(.5+.5*Math.sin(t*1.3)),a:t=>.012*Math.sin(t*1.3)}]},
     cam:t=>({s:lerp(1,1.06,seg(t,0,9)),x:lerp(0,-.02,seg(t,0,9)),y:0}),
     words:t=>{const n=(a,b,t0,t1)=>Math.round(lerp(a,b,easeO(seg(t,t0,t1))));return[word(`${n(1,14,3.2,5.4)} הפריות · ${n(1,28,4,6.2)} החזרות`,pop(t,3.2)),word("6 זריקות ביום",pop(t,6.6),{line:1})];}},
   {scene:"והוא שם",sub:"לא עוזב לרגע",k:"שקף 6",img:"img12",reveal:[0,3.6],dur:7.5,
+    rig:{bones:[{p:[.15,.86],parent:-1,reg:[{rect:[0,.15,.64,.88,.05]}],a:t=>-.02*(.5-.5*Math.cos(t*2*Math.PI/3.2))},
+      {p:[.75,.85],parent:-1,reg:[{rect:[.6,.05,.9,.75,.05]}],ty:t=>-.025*(.5-.5*Math.cos(t*2*Math.PI/3.2))}]},
     cam:t=>({s:lerp(1.05,1,seg(t,0,7.5)),x:0,y:0}),
     words:t=>[word("גם אם פספס ימים שלמים בעבודה",pop(t,3.6)),word("גם כשאיימו לפטר אותו",pop(t,4.8),{line:1})]},
   {scene:"והוא שם",sub:"לא עוזב לרגע",k:"שקף 6",img:"img15",reveal:[0,3.2],dur:8.5,
+    rig:{bones:[{p:[.55,1],parent:-1,reg:[{rect:[0,0,1,.9,.06]}],a:t=>.015*Math.sin(t*1.1)},{p:[.33,.45],parent:0,reg:[{cap:[.33,.45,.3,.3,.09]}],a:t=>.035*Math.sin(t*1.1+.8)}]},
     cam:t=>({s:lerp(1,1.06,seg(t,0,8.5)),x:0,y:0}),
     words:t=>[word("מטפל בי, מקלח אותי, מכין לי אוכל",pop(t,3.4))]},
 ];
@@ -98,6 +159,7 @@ function drawShot(L,s,lt,fade){
   const cam=s.cam?s.cam(lt):{s:1,x:0,y:0},p=s.reveal?ease(seg(lt,s.reveal[0],s.reveal[1])):1,mix=s.mix?s.mix(lt):0;
   let r=null;
   if(s.alt||s.altCrop){r=drawLayer(L,s,s.img,s.crop,p,fade*(1-mix),cam);drawLayer(L,s,s.alt||s.img,s.altCrop||s.crop,1,fade*mix,cam);}
+  else if(s.rig)r=drawWarped(L,s,s.img,p,fade,cam,lt);
   else r=drawLayer(L,s,s.img,s.crop,p,fade,cam);
   if(s.flies)flies(L,r,s.flies,lt,fade*seg(lt,s.reveal[1]-.6,s.reveal[1]+.4));
   if(s.shards)shards(L,r,s.shards,lt);
