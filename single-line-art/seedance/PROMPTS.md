@@ -6,7 +6,7 @@
 בכל פרומפט יש אותה פסקת סגנון בסוף. היא חשובה: היא שומרת על הקו השחור הדק על רקע לבן.
 
 סגנון (להעתיק בסוף כל פרומפט):
-`Keep the exact hand-drawn black ink continuous-line sketch style on a pure white background. No color, no shading, no new objects, no text. The drawing stays the same, only the described parts move. Static camera.`
+`Keep the exact hand-drawn black ink continuous-line sketch style on a pure white background. No color, no shading, no new objects, no text. Everything is alive: all the lines keep flowing, swaying and gently redrawing themselves like ink in motion, while the characters stay recognizable. Static camera.`
 
 ---
 
@@ -26,7 +26,7 @@
 `The pregnant woman slowly strokes her belly with her hand, she breathes calmly, the baby inside the belly moves gently, a few strands of her hair move.` + סגנון
 
 ## 06-baby-heartbeat.png · התינוק בפגייה
-`The newborn baby breathes slowly, the chest rises and falls, a tiny hand moves near the mouth. The heartbeat line keeps its shape.` + סגנון
+`The newborn baby breathes slowly, the chest rises and falls, a tiny hand moves near the mouth. The heartbeat lines on both sides are alive: the pulse travels along them from left to right, the spikes rise and fall with each heartbeat, and the lines wave softly. The loose lines of the blanket around the baby drift and curl gently.` + סגנון
 
 ## 07-eyes.png · עצמתי עיניים
 `Only the top pair of eyes: the eyes blink twice, then slowly close and stay closed, matching the closed eyes below.` + סגנון
