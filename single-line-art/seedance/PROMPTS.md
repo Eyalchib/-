@@ -26,7 +26,9 @@
 `The pregnant woman slowly strokes her belly with her hand, she breathes calmly, the baby inside the belly moves gently, a few strands of her hair move.` + סגנון
 
 ## 06-baby-heartbeat.png · התינוק בפגייה
-`The newborn baby breathes slowly, the chest rises and falls, a tiny hand moves near the mouth. The heartbeat lines on both sides are alive: the pulse travels along them from left to right, the spikes rise and fall with each heartbeat, and the lines wave softly. The loose lines of the blanket around the baby drift and curl gently.` + סגנון
+`The sleeping newborn baby keeps exactly the same body as in the image: two hands curled together near the mouth, no extra hands, arms or fingers. The baby only breathes slowly, the back and chest rise and fall softly, the eyes stay closed. The heartbeat lines on both sides are alive: the pulse travels along them from left to right, the spikes rise and fall with each heartbeat. The loose lines of the blanket drift and curl gently around the baby.`
+
+Negative prompt (אם יש שדה כזה): `extra hands, extra arms, extra fingers, extra limbs, deformed baby, color, shading` + סגנון
 
 ## 07-eyes.png · עצמתי עיניים
 `Only the top pair of eyes: the eyes blink twice, then slowly close and stay closed, matching the closed eyes below.` + סגנון
